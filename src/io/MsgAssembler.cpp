@@ -44,6 +44,7 @@
 
 // ROS includes
 #include <sensor_msgs/Image.h>
+#include <ros/ros.h>
 
 #include <object_recognition_core/common/pose_result.h>
 #include <object_recognition_core/common/types.h>
@@ -81,11 +82,22 @@ struct MsgAssembler {
 
     std::string frame_id;
     if (*image_message_) {
+        printf("IMAGE frame is %s\n", (*image_message_)->header.frame_id.c_str());
       frame_id = (*image_message_)->header.frame_id;
       time = (*image_message_)->header.stamp;
     } else
-      if (!frame_id_->empty())
+      if (!frame_id_->empty()) {
+        printf("Non-Image frame %s\n", (*frame_id_).c_str());
         frame_id = *frame_id_;
+      }
+
+    ros::NodeHandle nh("~");
+    std::string paramFrameId;
+    nh.getParam("sensor_frame", paramFrameId);
+    if(!paramFrameId.empty()) {
+        frame_id = paramFrameId;
+        ROS_INFO("MsgAssembler setting frame id to ~sensor_frame_id = %s", frame_id.c_str());
+    }
 
     msg->header.frame_id = frame_id;
     msg->header.stamp = time;
